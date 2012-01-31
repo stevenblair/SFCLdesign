@@ -1,0 +1,470 @@
+<html>
+	<head>
+		<title>SFCL current-time characteristics design</title>
+		<link type="text/css" href="css/vader/jquery-ui-1.8.14.custom.css" rel="Stylesheet" />
+		<noscript>
+		This page requires JavaScript.
+		</noscript>
+		<script type="text/javascript">
+			var _gaq = _gaq || [];
+			_gaq.push(['_setAccount', 'UA-21122920-1']);
+			_gaq.push(['_trackPageview']);
+
+			(function() {
+				var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+				ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+				var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+			})();
+		</script>
+		<script src="js/processing-1.3.6.min.js"></script>
+		<script src="js/jquery-1.7.1.min.js"></script>
+		<script src="js/jquery-ui-1.8.14.custom.min.js"></script>
+		<script type="text/javascript">
+		/**
+		 * SFCL current-time characteristics design
+		 *
+		 * Copyright (c) 2012 Steven Blair
+		 *
+		 * Permission is hereby granted, free of charge, to any person obtaining a copy
+		 * of this software and associated documentation files (the "Software"), to deal
+		 * in the Software without restriction, including without limitation the rights
+		 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+		 * copies of the Software, and to permit persons to whom the Software is
+		 * furnished to do so, subject to the following conditions:
+		 *
+		 * The above copyright notice and this permission notice shall be included in
+		 * all copies or substantial portions of the Software.
+		 *
+		 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+		 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+		 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+		 * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+		 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+		 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+		 * THE SOFTWARE.
+		 */
+
+		Processing.data = {};
+		resetData();
+		
+		$(function() {
+			$("#slider-time-range").slider({
+				values: Processing.data.timeRange,
+				range: true,
+				min: Processing.data.timeRangeLimits[0],
+				max: Processing.data.timeRangeLimits[1],
+				step: 0.01,
+				orientation: "vertical",
+				slide: function(event, ui) {
+					Processing.data.timeRange = ui.values;
+					updateLabels();
+				}
+			});
+			$("#slider-current-range").slider({
+				values: Processing.data.currentRange,
+				range: true,
+				min: Processing.data.currentRangeLimits[0],
+				max: Processing.data.currentRangeLimits[1],
+				step: 0.01,
+				slide: function(event, ui) {
+					Processing.data.currentRange = ui.values;
+					updateLabels();
+				}
+			});
+			$("#slider-radius").slider({
+				value: Processing.data.sc_radius,
+				range: "min",
+				min: 0.001,
+				max: 0.01,
+				step: 0.0001,
+				slide: function(event, ui) {
+					Processing.data.sc_radius = ui.value;
+					updateLabels();
+				}
+			});
+			$("#slider-length").slider({
+				value: Processing.data.sc_length,
+				range: "min",
+				min: 50.0,
+				max: 100.0,
+				step: 0.1,
+				slide: function(event, ui) {
+					Processing.data.sc_length = ui.value;
+					updateLabels();
+				}
+			});
+			$("#slider-Ta").slider({
+				value: Processing.data.Ta,
+				range: "min",
+				min: 1.0,
+				max: Processing.data.Tc,
+				step: 0.1,
+				slide: function(event, ui) {
+					Processing.data.Ta = ui.value;
+					updateLabels();
+				}
+			});
+			$("#slider-rho").slider({
+				value: Processing.data.rho_Tc / 1.0e-6,
+				range: "min",
+				min: 0.1,
+				max: 10.0,
+				step: 0.01,
+				slide: function(event, ui) {
+					Processing.data.rho_Tc = ui.value * 1.0e-6;
+					updateLabels();
+				}
+			});
+			$("#slider-Cv").slider({
+				value: Processing.data.Cv,
+				range: "min",
+				min: 100000.0,
+				max: 5000000.0,
+				step: 10.0,
+				slide: function(event, ui) {
+					Processing.data.Cv = ui.value;
+					updateLabels();
+				}
+			});
+			$("#slider-kappa").slider({
+				value: Processing.data.kappa,
+				range: "min",
+				min: 100.0,
+				max: 10000.0,
+				step: 1.0,
+				slide: function(event, ui) {
+					Processing.data.kappa = ui.value;
+					updateLabels();
+				}
+			});
+
+			$(".ui-slider").each(function() {
+				$(this).bind("slide", function(event, ui) {
+					Processing.data.change = true;
+				})
+			});
+
+			$("#reset-button").button().click(function() {
+				reset();
+			});
+
+			$("#info-button").button();
+
+			//$("#info").hide();
+			/*setTimeout(function() {
+				$("#info").fadeOut(2000, "easeOutCubic");
+			}, 1500);*/
+
+			$("#info-button").mouseenter(function() {
+				var leftPos = $("#info-button").width() + $("#info-button").offset().left + 15;
+				var topPos = $("#info-button").offset().top + $("#info-button").height() - $("#info").height();
+				$("#info").css({"left" : leftPos + "px", "top" : topPos + "px"});
+				$("#info").fadeIn();
+			});
+
+			$("#info").mouseenter(function() {
+				$("#info").stop(true);
+				$("#info").fadeTo(50, 1.0);
+			});
+
+			$("#info, #info-button").mouseleave(function() {
+				$("#info").delay(500).fadeOut();
+			});
+
+			$("#scale-type").buttonset();
+
+			$("#scale-type").click(function() {
+				if ($("#linear").is(":checked")) {
+					setLinearScale();
+					Processing.data.linear = true;
+				}
+				else {
+					setLogScale();
+					Processing.data.linear = false;
+				}
+
+				updateLabels();
+				Processing.data.change = true;
+			});
+		});
+
+
+		function setLinearScale() {
+			$("#slider-current-range").slider({min: 0.0});
+	        if (Processing.data.currentRange[0] == Processing.data.MIN_CURRENT_LOGLOG) {
+	          Processing.data.currentRange[0] = 0.0;
+	        }
+			$("#slider-time-range").slider({min: 0.0});
+	        if (Processing.data.timeRange[0] == Processing.data.MIN_TIME_LOGLOG) {
+	        	Processing.data.timeRange[0] = 0.0;
+	        }
+		}
+
+		function setLogScale() {
+	        $("#slider-current-range").slider({min: Processing.data.MIN_CURRENT_LOGLOG});
+	        if (Processing.data.currentRange[0] < Processing.data.MIN_CURRENT_LOGLOG) {
+	        	Processing.data.currentRange[0] = Processing.data.MIN_CURRENT_LOGLOG;
+	        	//$("#slider-current-range").slider("option", "value", Processing.data.MIN_CURRENT_LOGLOG);
+	        }
+	        $("#slider-time-range").slider({min: Processing.data.MIN_TIME_LOGLOG});
+	        if (Processing.data.timeRange[0] < Processing.data.MIN_TIME_LOGLOG) {
+	        	Processing.data.timeRange[0] = Processing.data.MIN_TIME_LOGLOG;
+	        	//$("#slider-time-range").slider("option", "value", Processing.data.MIN_TIME_LOGLOG);
+	        }
+		}
+
+		function updateLabels() {
+			var area = Math.PI * Processing.data.sc_radius * Processing.data.sc_radius;
+			var volume = Math.round(area * Processing.data.sc_length * 1e6);
+			var resistance = Processing.data.rho_Tc * Processing.data.sc_length / area;
+
+			$("#time-range-label").html("time: " + Processing.data.timeRange[0] + " s to " + Processing.data.timeRange[1] + " s");
+			$("#current-range-label").html("current: " + Processing.data.currentRange[0] + " A to " + Processing.data.currentRange[1] + " A");
+			$("#radius-label").html("radius: " + Processing.data.sc_radius + " m");
+			$("#length-label").html("length: " + Processing.data.sc_length + " m");
+			$("#volume-label").html("volume: " + volume + " cm<sup>3</sup>");
+			$("#Ta-label").html("T<sub>a</sub>: " + Processing.data.Ta + " K");
+			$("#rho-label").html("&rho; at T<sub>c</sub>: " + (Processing.data.rho_Tc * 1e6).toFixed(2) + " &mu;&Omega;-m");
+			$("#resistance-label").html("resistance at T<sub>c</sub>: " + (resistance).toFixed(2) + " &Omega;");
+			$("#Cv-label").html("C<sub>v</sub>: " + Processing.data.Cv + " J/K-m<sup>3</sup>");
+			$("#kappa-label").html("&kappa;: " + Processing.data.kappa + " W/K-m<sup>2</sup>");
+		}
+
+		function setAllSliders() {
+			$("#slider-time-range").slider("values", Processing.data.timeRange);
+			if (Processing.data.linear == true) {
+				$("#linear").attr('checked', true).button("refresh");
+			}
+			else {
+				$("#log-log").attr('checked', true).button("refresh");
+			}
+
+			Processing.data.change = true;
+
+			updateLabels();
+		}
+
+		function resetData() {
+			Processing.data = {
+				MIN_CURRENT_LOGLOG: 100.0,
+				MIN_TIME_LOGLOG: 0.001,
+				timeRange: [0.0, 1.5],
+				currentRange: [0.0, 2000.0],
+				timeRangeLimits: [0.0, 10.0],
+				currentRangeLimits: [0.0, 10000.0],
+				linear: false,
+				change: true,
+
+				// default superconductor characteristics
+				sc_length: 50.0,            // superconductor length (m)
+				sc_radius: 0.002,           // superconductor radius (m)
+				Cv: 1.0e6,
+				kappa: 1.5e3,
+				Jc_77K: 1.5e7,               // critical current density at 77K (A/m^2)
+				E0: 0.1,                     // E-field for transition from superconducting state to flux-flow state (V/m)
+				Ec: 1e-6 * 100,              // definition of E-field required for Jc (V/m)
+				alpha_77K: 6.0,              // exponent value during superconducting state (dimensionless)
+				beta: 3,                     // exponent value during flux-flow state (dimensionless)
+				Tc: 95,                      // critical temperature (K)
+				rho_Tc: 1.0e-6,              // superconductor resistivity at Tc (ohm-m)
+				Ta: 77,
+				T: Processing.data.Tc
+			};
+
+			if (Processing.data.linear == true) {
+				setLinearScale();
+			}
+			else {
+				setLogScale();
+			}
+		}
+
+		function reset() {
+			resetData();
+			setAllSliders();
+		}
+		</script>
+		<style>
+			body {
+				 background-color: #000000;
+				 font-family: sans-serif;
+			}
+			div {
+				/*height: 2em;*/
+				color: #FFFFFF;
+				font-size: 0.75em;
+			}
+			div.controls {
+				/*width: 800px;*/
+				clear: left;
+			}
+			div.controls span {
+				display:table-cell;
+				vertical-align: middle;
+			}
+			div.controls span.horizontal {
+				width: 150px;
+				float: left;
+				margin: 10px;
+			}
+			div.controls span.vertical {
+				height: 80px;
+				float: left;
+				margin: 10px;
+
+			}
+			td {
+				vertical-align: top;
+			}
+
+			a {
+				font-weight:bold;
+				color:#0699C4;
+				text-decoration: none;
+			}
+			a:hover, a:active {
+				color:#003652;
+			}
+
+			#SFCLDesignCanvas {
+				position: absolute;
+				left: 260px;
+				top: 0px;
+				z-index: -25;
+			}
+
+			div.label {
+				/*position: absolute;*/
+				font-size: 1.5em;
+				text-align: left;
+				font-family: courier;
+				font-weight: bold;
+				margin-left: 5px;
+			}
+
+			/*#time-range-label {
+				position: absolute;
+				left: 45px;
+				top: 185px;
+				color: #B42126;
+			}
+			#current-range-label {
+				position: absolute;
+				left: 45px;
+				top: 285px;
+				color: #E26366;
+			}*/
+
+			#toolbar {
+				/*position: absolute;
+				left: 10px;
+				top: 310px;
+				height: 175px;*/
+				padding: 5px;
+				margin-left: 10px;
+				width: 215px;
+			}
+			#toolbar button {
+				margin: 2px;
+				font-size: 0.9em;
+			}
+			#scale-type {
+				padding: 2px;
+				font-size: 0.8em;
+				/*font-size: 1em;*/
+			}
+			#reset-button {
+				top: 0px;
+			}
+			#info-button {
+				top: 8px;
+			}
+
+			/*.ui-effects-transfer { border: 2px solid #C8C8C8; }*/
+			#info {
+				/*padding: 0.4em;
+				left: 180px;
+				top: 350px;
+				padding: 5px;*/
+				/*height: 175px;*/
+				position: absolute;
+				display: none;
+				width: 500px;
+			}
+			#info p {font-size: 1.0em; margin: 0.5em;}
+			#info h3 {font-size: 1.1em; margin: 0; padding: 0.4em; text-align: center;}
+
+			div.spacer {padding: 30px;}
+		</style>
+	</head>
+	<body>
+		<div id="toolbar" class="ui-widget-content ui-corner-all">
+	 		<!--<div class="controls" id="time-range">
+	 			<div class="label" id="time-range-label"></div>
+				<span class="vertical" id="slider-time-range" title="time range"></span>
+			</div>
+	 		<div class="controls" id="current-range">
+	 			<div class="label" id="current-range-label"></div>
+				<span class="horizontal" id="slider-current-range" title="current range"></span>
+			</div>
+			<div class="spacer">
+			</div>-->
+	 		<div class="controls" id="radius" title="superconductor radius">
+	 			<div class="label" id="radius-label"></div>
+				<span class="horizontal" id="slider-radius"></span>
+			</div>
+	 		<div class="controls" id="length" title="superconductor length">
+	 			<div class="label" id="length-label"></div>
+				<span class="horizontal" id="slider-length"></span>
+			</div>
+	 		<div class="controls" id="volume" title="superconductor volume">
+	 			<div class="label" id="volume-label"></div>
+	 		</div>
+			<div class="spacer">
+			</div>
+	 		<div class="controls" id="rho" title="superconductor resistivity and resistance (at Tc)">
+	 			<div class="label" id="rho-label"></div>
+				<span class="horizontal" id="slider-rho"></span>
+	 			<div class="label" id="resistance-label"></div>
+			</div>
+			<div class="spacer">
+			</div>
+	 		<div class="controls" id="Ta" title="starting/ambient temperature">
+	 			<div class="label" id="Ta-label"></div>
+				<span class="horizontal" id="slider-Ta"></span>
+			</div>
+	 		<div class="controls" id="Cv" title="superconductor volumetric specific heat (amount of energy needed to raise temperature of superconductor, per unit of volume)">
+	 			<div class="label" id="Cv-label"></div>
+				<span class="horizontal" id="slider-Cv"></span>
+			</div>
+	 		<div class="controls" id="kappa" title="heat transfer to cooling reservoir (effectiveness of cooling system at removing heat from superconductor)">
+	 			<div class="label" id="kappa-label"></div>
+				<span class="horizontal" id="slider-kappa"></span>
+			</div>
+			<div class="spacer">
+			</div>
+			<div id="scale-type">
+				<input type="radio" id="linear" name="radio" checked="checked" /><label for="linear" title="plot on linear scale">linear</label>
+				<input type="radio" id="log-log" name="radio" /><label for="log-log" title="plot on log-log scale">log-log</label>
+			</div>
+			<p>
+			<button id="reset-button" title="reset to default values">reset</button><br />
+			<button id="info-button">info</button>
+			</p>
+		</div>
+		<div id="info" class="ui-widget-content ui-corner-all">
+			<h3 class="ui-widget-header ui-corner-all">Info - SFCL current-time characteristics design</h3>
+			<p>
+				This tool plots the current-time characteristics of a resistive superconducting fault current limiter (SFCL). The <span style="color: #B42126;">red</span> curve illustrates the time to quench (become resistive) for a given fault current. Several superconductor properties can be adjusted to see their effect.
+			</p>
+			<p>
+				This uses <a href="http://processingjs.org/">processing.js</a>, and requires an HTML5 browser, and does not work in Internet Explorer. The source code is <a href="https://github.com/stevenblair/SFCLdesign">here</a>.
+			</p>
+			<p>
+				Return to <a href="http://personal.strath.ac.uk/steven.m.blair">main page</a>.
+			</p>
+		</div>
+
+		<canvas id="SFCLDesignCanvas" datasrc="SFCLDesign.pde" width="900" height="700"></canvas>
+	</body>
+</html>
