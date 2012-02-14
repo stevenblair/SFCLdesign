@@ -297,24 +297,22 @@
 			div.controls {
 				/*width: 800px;*/
 				clear: left;
+				padding-left: 5px;
+				margin-bottom: 10px;
 			}
 			div.controls span {
-				display:table-cell;
+				display: table-cell;
 				vertical-align: middle;
 			}
 			div.controls span.horizontal {
 				width: 150px;
-				float: left;
+				/*float: left;*/
 				margin: 10px;
 			}
 			div.controls span.vertical {
 				height: 80px;
-				float: left;
+				/*float: left;*/
 				margin: 10px;
-
-			}
-			td {
-				vertical-align: top;
 			}
 
 			a {
@@ -335,11 +333,13 @@
 
 			div.label {
 				/*position: absolute;*/
-				font-size: 1.5em;
+				font-size: 1.8em;
 				text-align: left;
-				font-family: courier;
+				font-family: monospace;
 				font-weight: bold;
 				margin-left: 5px;
+				margin-bottom: 5px;
+				margin-top: 10px;
 			}
 
 			/*#time-range-label {
@@ -355,23 +355,19 @@
 				color: #E26366;
 			}*/
 
-			#toolbar {
-				/*position: absolute;
-				left: 10px;
-				top: 310px;
-				height: 175px;*/
+			.toolbar {
 				padding: 5px;
 				margin-left: 10px;
-				width: 215px;
+				margin-bottom: 10px;
+				width: 205px;
 			}
-			#toolbar button {
+			.toolbar button {
 				margin: 2px;
 				font-size: 0.9em;
 			}
 			#scale-type {
 				padding: 2px;
 				font-size: 0.8em;
-				/*font-size: 1em;*/
 			}
 			#reset-button {
 				top: 0px;
@@ -382,11 +378,6 @@
 
 			/*.ui-effects-transfer { border: 2px solid #C8C8C8; }*/
 			#info {
-				/*padding: 0.4em;
-				left: 180px;
-				top: 350px;
-				padding: 5px;*/
-				/*height: 175px;*/
 				position: absolute;
 				display: none;
 				width: 500px;
@@ -394,11 +385,11 @@
 			#info p {font-size: 1.0em; margin: 0.5em;}
 			#info h3 {font-size: 1.1em; margin: 0; padding: 0.4em; text-align: center;}
 
-			div.spacer {padding: 30px;}
+			div.spacer {padding: 0px;}
 		</style>
 	</head>
 	<body>
-		<div id="toolbar" class="ui-widget-content ui-corner-all">
+		<div class="toolbar ui-widget-content ui-corner-all">
 	 		<!--<div class="controls" id="time-range">
 	 			<div class="label" id="time-range-label"></div>
 				<span class="vertical" id="slider-time-range" title="time range"></span>
@@ -407,8 +398,8 @@
 	 			<div class="label" id="current-range-label"></div>
 				<span class="horizontal" id="slider-current-range" title="current range"></span>
 			</div>
-			<div class="spacer">
-			</div>-->
+		</div>
+		<div class="toolbar ui-widget-content ui-corner-all">-->
 	 		<div class="controls" id="radius" title="superconductor radius">
 	 			<div class="label" id="radius-label"></div>
 				<span class="horizontal" id="slider-radius"></span>
@@ -420,15 +411,15 @@
 	 		<div class="controls" id="volume" title="superconductor volume">
 	 			<div class="label" id="volume-label"></div>
 	 		</div>
-			<div class="spacer">
-			</div>
+		</div>
+		<div class="toolbar ui-widget-content ui-corner-all">
 	 		<div class="controls" id="rho" title="superconductor resistivity and resistance (at Tc)">
 	 			<div class="label" id="rho-label"></div>
 				<span class="horizontal" id="slider-rho"></span>
 	 			<div class="label" id="resistance-label"></div>
 			</div>
-			<div class="spacer">
-			</div>
+		</div>
+		<div class="toolbar ui-widget-content ui-corner-all">
 	 		<div class="controls" id="Ta" title="starting/ambient temperature">
 	 			<div class="label" id="Ta-label"></div>
 				<span class="horizontal" id="slider-Ta"></span>
@@ -441,8 +432,8 @@
 	 			<div class="label" id="kappa-label"></div>
 				<span class="horizontal" id="slider-kappa"></span>
 			</div>
-			<div class="spacer">
-			</div>
+		</div>
+		<div class="toolbar ui-widget-content ui-corner-all">
 			<div id="scale-type">
 				<input type="radio" id="linear" name="radio" checked="checked" /><label for="linear" title="plot on linear scale">linear</label>
 				<input type="radio" id="log-log" name="radio" /><label for="log-log" title="plot on log-log scale">log-log</label>
