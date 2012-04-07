@@ -19,6 +19,7 @@
 		<script src="js/processing-1.3.6.min.js"></script>
 		<script src="js/jquery-1.7.1.min.js"></script>
 		<script src="js/jquery-ui-1.8.14.custom.min.js"></script>
+		<script src="js/jquery.mousewheel.js"></script>
 		<script type="text/javascript">
 		/**
 		 * SFCL current-time characteristics design
@@ -57,7 +58,7 @@
 				orientation: "vertical",
 				slide: function(event, ui) {
 					Processing.data.timeRange = ui.values;
-					updateLabels();
+					Processing.data.change = true;
 				}
 			});
 			$("#slider-current-range").slider({
@@ -68,7 +69,7 @@
 				step: 0.01,
 				slide: function(event, ui) {
 					Processing.data.currentRange = ui.values;
-					updateLabels();
+					Processing.data.change = true;
 				}
 			});
 			$("#slider-radius").slider({
@@ -79,7 +80,7 @@
 				step: 0.0001,
 				slide: function(event, ui) {
 					Processing.data.sc_radius = ui.value;
-					updateLabels();
+					Processing.data.change = true;
 				}
 			});
 			$("#slider-length").slider({
@@ -90,7 +91,7 @@
 				step: 0.1,
 				slide: function(event, ui) {
 					Processing.data.sc_length = ui.value;
-					updateLabels();
+					Processing.data.change = true;
 				}
 			});
 			$("#slider-Ta").slider({
@@ -101,7 +102,7 @@
 				step: 0.1,
 				slide: function(event, ui) {
 					Processing.data.Ta = ui.value;
-					updateLabels();
+					Processing.data.change = true;
 				}
 			});
 			$("#slider-rho").slider({
@@ -112,7 +113,7 @@
 				step: 0.01,
 				slide: function(event, ui) {
 					Processing.data.rho_Tc = ui.value * 1.0e-6;
-					updateLabels();
+					Processing.data.change = true;
 				}
 			});
 			$("#slider-Cv").slider({
@@ -123,7 +124,7 @@
 				step: 10.0,
 				slide: function(event, ui) {
 					Processing.data.Cv = ui.value;
-					updateLabels();
+					Processing.data.change = true;
 				}
 			});
 			$("#slider-kappa").slider({
@@ -134,7 +135,7 @@
 				step: 1.0,
 				slide: function(event, ui) {
 					Processing.data.kappa = ui.value;
-					updateLabels();
+					Processing.data.change = true;
 				}
 			});
 
@@ -142,6 +143,48 @@
 				$(this).bind("slide", function(event, ui) {
 					Processing.data.change = true;
 				})
+			});
+
+			function sign(delta) {
+				if (delta > 0) {
+					return 1;
+				}
+				else if (delta < 0) {
+					return -1;
+				}
+				else {
+					return 0;
+				}
+			}
+
+			$('.ui-slider').mousewheel(function(event, delta, deltaX, deltaY) {
+                var element = $(this);
+                var value = element.slider('option', 'value');
+                var step = element.slider('option', 'step');
+                var min = element.slider('option', 'min');
+                var max = element.slider('option', 'max');
+
+                // if slider deals with non-integer values, increase step size
+                //if (step < 1.0) {
+                	step = (max - min) / (100.0 / Processing.data.SCROLL_PERCENT);
+                //}
+
+                var newValue = value + step * sign(delta);
+
+                if (newValue < min) {
+                	newValue = min;
+                }
+
+                if (newValue > max) {
+                	newValue = max;
+                }
+
+				element.slider("option", "value", newValue);
+                element.slider("option", "slide").call(element, null, { value: newValue });
+
+				Processing.data.change = true;
+
+                return false;
 			});
 
 			$("#reset-button").button().click(function() {
@@ -183,7 +226,6 @@
 					Processing.data.linear = false;
 				}
 
-				updateLabels();
 				Processing.data.change = true;
 			});
 		});
@@ -218,16 +260,16 @@
 			var volume = Math.round(area * Processing.data.sc_length * 1e6);
 			var resistance = Processing.data.rho_Tc * Processing.data.sc_length / area;
 
-			$("#time-range-label").html("time: " + Processing.data.timeRange[0] + " s to " + Processing.data.timeRange[1] + " s");
-			$("#current-range-label").html("current: " + Processing.data.currentRange[0] + " A to " + Processing.data.currentRange[1] + " A");
-			$("#radius-label").html("radius: " + Processing.data.sc_radius + " m");
-			$("#length-label").html("length: " + Processing.data.sc_length + " m");
+			$("#time-range-label").html("time: " + (Processing.data.timeRange[0]).toFixed(2) + " s to " + (Processing.data.timeRange[1]).toFixed(2) + " s");
+			$("#current-range-label").html("current: " + (Processing.data.currentRange[0]).toFixed(2) + " A to " + (Processing.data.currentRange[1]).toFixed(2) + " A");
+			$("#radius-label").html("radius: " + (Processing.data.sc_radius).toFixed(4) + " m");
+			$("#length-label").html("length: " + (Processing.data.sc_length).toFixed(2) + " m");
 			$("#volume-label").html("volume: " + volume + " cm<sup>3</sup>");
-			$("#Ta-label").html("T<sub>a</sub>: " + Processing.data.Ta + " K");
+			$("#Ta-label").html("T<sub>a</sub>: " + (Processing.data.Ta).toFixed(1) + " K");
 			$("#rho-label").html("&rho; at T<sub>c</sub>: " + (Processing.data.rho_Tc * 1e6).toFixed(2) + " &mu;&Omega;-m");
 			$("#resistance-label").html("resistance at T<sub>c</sub>: " + (resistance).toFixed(2) + " &Omega;");
-			$("#Cv-label").html("C<sub>v</sub>: " + Processing.data.Cv + " J/K-m<sup>3</sup>");
-			$("#kappa-label").html("&kappa;: " + Processing.data.kappa + " W/K-m<sup>2</sup>");
+			$("#Cv-label").html("C<sub>v</sub>: " + (Processing.data.Cv).toFixed(0) + " J/K-m<sup>3</sup>");
+			$("#kappa-label").html("&kappa;: " + (Processing.data.kappa).toFixed(0) + " W/K-m<sup>2</sup>");
 		}
 
 		function setAllSliders() {
@@ -240,12 +282,11 @@
 			}
 
 			Processing.data.change = true;
-
-			updateLabels();
 		}
 
 		function resetData() {
 			Processing.data = {
+				SCROLL_PERCENT: 5.0,
 				MIN_CURRENT_LOGLOG: 100.0,
 				MIN_TIME_LOGLOG: 0.001,
 				timeRange: [0.0, 1.5],

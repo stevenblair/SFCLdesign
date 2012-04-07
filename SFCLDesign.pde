@@ -439,6 +439,8 @@ void draw() {
     
     updateValues();
 
+    updateLabels();   // implemented in JavaScript
+
     background(0);
     textFont(font);
     //boolean foundE0 = false;
@@ -449,7 +451,7 @@ void draw() {
       float k = i[y] * sc_length * E0 * pow((Ec / E0), (beta/alpha_77K)) * pow((J / Jc_77K), beta);
 
       float r = - (Csc*(-(Rsc*(Ta-Tc)*atan((-Ta-Tc+2 *Ta)/sqrt(-Ta*Ta+2 *Ta *Tc-Tc*Tc+4 *Tc*k *Rsc-308 *k* Rsc)))/sqrt(-Ta*Ta+2 *Ta *Tc-Tc*Tc+4 *Tc* k* Rsc-308 *k* Rsc)-1/2* Rsc *log(-Ta *(Ta+Tc)+Ta *Tc+(Tc-77) *k* Rsc+Ta*Ta)));
-      t[y] = Csc*(-(Rsc*(Ta-Tc)*atan((-Ta-Tc+2 *T)/sqrt(-Ta*Ta+2 *Ta *Tc-Tc*Tc+4 *Tc*k *Rsc-308 *k* Rsc)))/sqrt(-Ta*Ta+2 *Ta *Tc-Tc*Tc+4 *Tc* k* Rsc-308 *k* Rsc)-1/2* Rsc *log(-T *(Ta+Tc)+Ta *Tc+(Tc-77) *k* Rsc+T*T))+r;
+      t[y] = Csc*(-(Rsc*(Ta-Tc)*atan((-Ta-Tc+2 *T)/sqrt(-Ta*Ta+2 *Ta *Tc-Tc*Tc+4 *Tc*k *Rsc-308 *k* Rsc)))/sqrt(-Ta*Ta+2 *Ta *Tc-Tc*Tc+4 *Tc* k* Rsc-308 *k* Rsc)-1/2* Rsc *log(-T *(Ta+Tc)+Ta *Tc+(Tc-77) *k* Rsc+T*T)) + r;
       
       /*if (isNaN(t[y])) {
         t[y] = -1.0;
