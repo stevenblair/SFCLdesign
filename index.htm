@@ -273,7 +273,16 @@
 		}
 
 		function setAllSliders() {
-			$("#slider-time-range").slider("values", Processing.data.timeRange);
+			//$("#slider-time-range").slider("values", Processing.data.timeRange);
+			//$("#slider-current-range").slider("values", Processing.data.currentRange);
+
+			$("#slider-radius").slider("value", Processing.data.sc_radius);
+			$("#slider-length").slider("value", Processing.data.sc_length);
+			$("#slider-Ta").slider("value", Processing.data.Ta);
+			$("#slider-rho").slider("value", Processing.data.rho_Tc);
+			$("#slider-Cv").slider("value", Processing.data.Cv);
+			$("#slider-kappa").slider("value", Processing.data.kappa);
+
 			if (Processing.data.linear == true) {
 				$("#linear").attr('checked', true).button("refresh");
 			}
